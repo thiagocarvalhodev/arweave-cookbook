@@ -5,6 +5,8 @@ import 'package:arweave/utils.dart';
 import 'package:flutter/material.dart';
 // http
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 
 void main() async {
   runApp(const ArweavePermawebCookbookApp());
@@ -34,7 +36,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _textController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   bool _hasError = false;
@@ -70,6 +72,112 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.all(24),
             children: [
               Center(
+                child: Column(
+                  children: [
+                    Text('Check the code on the permaweb:',
+                        style: ArDriveTypography.body.bodyRegular()),
+                    GestureDetector(
+                      onTap: () {
+                        launchUrl(Uri.parse(
+                            'https://app.ardrive.io/#/drives/16b6edd0-10f2-478e-a4a8-03ac97f1b50b?name=permaweb'));
+                      },
+                      child: Text(
+                        'https://app.ardrive.io/#/drives/16b6edd0-10f2-478e-a4a8-03ac97f1b50b?name=permaweb',
+                        style: ArDriveTypography.body
+                            .bodyBold()
+                            .copyWith(decoration: TextDecoration.underline),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 24,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Column(
+                          children: [
+                            Text(
+                                'Check how to deploy on arweave using ardrive by playing the video here or on the permaweb:',
+                                style: ArDriveTypography.body.bodyRegular()),
+                            GestureDetector(
+                              onTap: () {
+                                launchUrl(Uri.parse(
+                                    'https://arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E'));
+                              },
+                              child: Text(
+                                'arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E',
+                                style: ArDriveTypography.body
+                                    .bodyBold()
+                                    .copyWith(
+                                        decoration: TextDecoration.underline),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          width: 24,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _controller.value.isPlaying
+                                  ? _controller.pause()
+                                  : _controller.play();
+                            });
+                            showAnimatedDialog(
+                              context,
+                              content: ArDriveStandardModal(
+                                hasCloseButton: true,
+                                width: 800,
+                                content: Column(
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.topRight,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: ArDriveIcons.x(),
+                                        ),
+                                      ),
+                                    ),
+                                    const VideoApp()
+                                  ],
+                                ),
+                              ),
+                            ).then((value) {
+                              setState(() {
+                                _controller.pause();
+                              });
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: ArDriveTheme.of(context)
+                                  .themeData
+                                  .colors
+                                  .themeBgCanvas,
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              _controller.value.isPlaying
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(
+                height: 24,
+              ),
+              Center(
                 child: Text(
                   'Arweave Permaweb Cookbook',
                   style: ArDriveTypography.headline.headline2Regular(),
@@ -95,7 +203,7 @@ class _HomePageState extends State<HomePage> {
 
                         return null;
                       },
-                      controller: _controller,
+                      controller: _textController,
                     ),
                   ),
                 ),
@@ -106,7 +214,7 @@ class _HomePageState extends State<HomePage> {
                   child: ArDriveButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        _getTransaction(_controller.text);
+                        _getTransaction(_textController.text);
                       }
                     },
                     text: 'Confirm',
@@ -334,5 +442,45 @@ class TagDecoder {
       name: decodeBase64ToString(tag["name"]),
       value: decodeBase64ToString(tag["value"]),
     );
+  }
+}
+
+final _controller = VideoPlayerController.networkUrl(
+  Uri.parse('https://arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E'),
+);
+
+/// Stateful widget to fetch and then display video content.
+class VideoApp extends StatefulWidget {
+  const VideoApp({super.key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _VideoAppState createState() => _VideoAppState();
+}
+
+class _VideoAppState extends State<VideoApp> {
+  @override
+  void initState() {
+    super.initState();
+    _controller.initialize().then((_) {
+      // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
+      setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _controller.value.isInitialized
+        ? AspectRatio(
+            aspectRatio: _controller.value.aspectRatio,
+            child: VideoPlayer(_controller),
+          )
+        : Container();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
   }
 }
