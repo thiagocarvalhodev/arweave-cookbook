@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
                             Column(
                               children: [
                                 Text(
-                                    'Check how to deploy on arweave using ardrive by playing the video here or on the permaweb:',
+                                    'Check how to deploy on arweave using ardrive by playing the video here or on open it the permaweb:',
                                     style:
                                         ArDriveTypography.body.bodyRegular()),
                                 GestureDetector(
