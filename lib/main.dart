@@ -79,16 +79,18 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         Text('Check the code on the permaweb:',
                             style: ArDriveTypography.body.bodyRegular()),
-                        GestureDetector(
-                          onTap: () {
-                            launchUrl(Uri.parse(
-                                'https://app.ardrive.io/#/drives/16b6edd0-10f2-478e-a4a8-03ac97f1b50b?name=permaweb'));
-                          },
-                          child: Text(
-                            'https://app.ardrive.io/#/drives/16b6edd0-10f2-478e-a4a8-03ac97f1b50b?name=permaweb',
-                            style: ArDriveTypography.body
-                                .bodyBold()
-                                .copyWith(decoration: TextDecoration.underline),
+                        MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: GestureDetector(
+                            onTap: () {
+                              launchUrl(Uri.parse(
+                                  'https://app.ardrive.io/#/drives/16b6edd0-10f2-478e-a4a8-03ac97f1b50b?name=permaweb'));
+                            },
+                            child: Text(
+                              'https://app.ardrive.io/#/drives/16b6edd0-10f2-478e-a4a8-03ac97f1b50b?name=permaweb',
+                              style: ArDriveTypography.body.bodyBold().copyWith(
+                                  decoration: TextDecoration.underline),
+                            ),
                           ),
                         ),
                         const SizedBox(
@@ -103,18 +105,21 @@ class _HomePageState extends State<HomePage> {
                                     'Check how to deploy on arweave using ardrive by playing the video here or on open it the permaweb:',
                                     style:
                                         ArDriveTypography.body.bodyRegular()),
-                                GestureDetector(
-                                  onTap: () {
-                                    launchUrl(Uri.parse(
-                                        'https://arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E'));
-                                  },
-                                  child: Text(
-                                    'arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E',
-                                    style: ArDriveTypography.body
-                                        .bodyBold()
-                                        .copyWith(
-                                            decoration:
-                                                TextDecoration.underline),
+                                MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      launchUrl(Uri.parse(
+                                          'https://arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E'));
+                                    },
+                                    child: Text(
+                                      'arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E',
+                                      style: ArDriveTypography.body
+                                          .bodyBold()
+                                          .copyWith(
+                                              decoration:
+                                                  TextDecoration.underline),
+                                    ),
                                   ),
                                 ),
                               ],

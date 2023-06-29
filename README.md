@@ -1,5 +1,5 @@
 # cookbock_flutter
-A brief description of what this project does and its purpose. Explain it's a Flutter project built to demonstrate basic functionalities with Arweave, utilizing the `ardrive_ui` and `arweave` packages.
+It's a Flutter project built to demonstrate basic functionalities with Arweave, utilizing the `ardrive_ui` and `arweave` packages.
 
 ## Features
 * Configuration setup for Arweave deployment.
