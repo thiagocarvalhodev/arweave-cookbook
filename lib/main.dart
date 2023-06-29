@@ -37,11 +37,9 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _controller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  String? _jsonResponse;
-
   bool _hasError = false;
 
-  JsonMappingObject? _jsonTx;
+  TransactionJson? _tx;
 
   @override
   void initState() {
@@ -49,20 +47,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _getTransaction(String transactionId) async {
-    final response = await http.get(
-      Uri.parse('https://arweave.net/tx/$transactionId'),
-    );
+    try {
+      _tx = await TransactionFetcher().getTransaction(transactionId);
 
-    if (response.statusCode == 200) {
       setState(() {
-        _jsonResponse = response.body;
-        final json = jsonDecode(_jsonResponse!);
-
-        _jsonTx = JsonMappingObject.fromJson(json);
-
         _hasError = false;
       });
-    } else {
+    } catch (e) {
       setState(() {
         _hasError = true;
       });
@@ -130,7 +121,7 @@ class _HomePageState extends State<HomePage> {
                   'Error',
                   style: ArDriveTypography.headline.headline5Regular(),
                 ),
-              if (_jsonResponse != null) ...[
+              if (_tx != null) ...[
                 Text(
                   'Transaction',
                   style: ArDriveTypography.headline.headline3Regular(),
@@ -143,28 +134,28 @@ class _HomePageState extends State<HomePage> {
                     'format',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.format.toString()),
+                  subtitle: Text(_tx!.format.toString()),
                 ),
                 ListTile(
                   title: Text(
                     'id',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.id),
+                  subtitle: Text(_tx!.id),
                 ),
                 ListTile(
                   title: Text(
                     'last_tx',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.lastTx),
+                  subtitle: Text(_tx!.lastTx),
                 ),
                 ListTile(
                   title: Text(
                     'owner',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.owner),
+                  subtitle: Text(_tx!.owner),
                 ),
                 ArDriveAccordion(
                   backgroundColor: Colors.transparent,
@@ -174,7 +165,7 @@ class _HomePageState extends State<HomePage> {
                         'tags',
                         style: ArDriveTypography.body.bodyRegular(),
                       ),
-                      _jsonTx!.tags
+                      _tx!.tags
                           .map((e) => Padding(
                                 padding: const EdgeInsets.only(left: 8.0),
                                 child: ListTile(
@@ -199,49 +190,49 @@ class _HomePageState extends State<HomePage> {
                     'target',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.target),
+                  subtitle: Text(_tx!.target),
                 ),
                 ListTile(
                   title: Text(
                     'quantity',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.quantity.toString()),
+                  subtitle: Text(_tx!.quantity.toString()),
                 ),
                 ListTile(
                   title: Text(
                     'data',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.data.toString()),
+                  subtitle: Text(_tx!.data.toString()),
                 ),
                 ListTile(
                   title: Text(
                     'data_size',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.dataSize.toString()),
+                  subtitle: Text(_tx!.dataSize.toString()),
                 ),
                 ListTile(
                   title: Text(
                     'data_root',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.dataRoot.toString()),
+                  subtitle: Text(_tx!.dataRoot.toString()),
                 ),
                 ListTile(
                   title: Text(
                     'reward',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.reward.toString()),
+                  subtitle: Text(_tx!.reward.toString()),
                 ),
                 ListTile(
                   title: Text(
                     'signature',
                     style: ArDriveTypography.body.bodyRegular(),
                   ),
-                  subtitle: Text(_jsonTx!.signature.toString()),
+                  subtitle: Text(_tx!.signature.toString()),
                 ),
               ]
             ],
@@ -252,7 +243,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class JsonMappingObject {
+class TransactionJson {
   int format;
   String id;
   String lastTx;
@@ -266,7 +257,7 @@ class JsonMappingObject {
   dynamic reward;
   dynamic signature;
 
-  JsonMappingObject({
+  TransactionJson({
     required this.format,
     required this.id,
     required this.lastTx,
@@ -281,8 +272,8 @@ class JsonMappingObject {
     required this.signature,
   });
 
-  factory JsonMappingObject.fromJson(Map<String, dynamic> json) {
-    return JsonMappingObject(
+  factory TransactionJson.fromJson(Map<String, dynamic> json) {
+    return TransactionJson(
       format: json["format"],
       id: json["id"],
       lastTx: json["last_tx"],
@@ -297,21 +288,6 @@ class JsonMappingObject {
       signature: (json["signature"]),
     );
   }
-
-  Map<String, dynamic> toJson() => {
-        "format": format,
-        "id": id,
-        "last_tx": lastTx,
-        "owner": owner,
-        "tags": List<dynamic>.from(tags.map((x) => x.toJson())),
-        "target": target,
-        "quantity": quantity,
-        // "data": data,
-        // "data_size": dataSize,
-        // "data_root": dataRoot,
-        // "reward": reward,
-        // "signature": signature,
-      };
 }
 
 class Tag {
@@ -323,13 +299,40 @@ class Tag {
     required this.value,
   });
 
-  factory Tag.fromJson(Map<String, dynamic> json) => Tag(
-        name: decodeBase64ToString(json["name"]),
-        value: decodeBase64ToString(json["value"]),
-      );
+  factory Tag.fromJson(Map<String, dynamic> json) =>
+      TagDecoder().decodeTag(json);
 
   Map<String, dynamic> toJson() => {
         "name": name,
         "value": value,
       };
+}
+
+/// Fetches the transaction from the Arweave network and parses
+/// the JSON response into a Dart object
+class TransactionFetcher {
+  Future<TransactionJson> getTransaction(String transactionId) async {
+    final response = await http.get(
+      Uri.parse('https://arweave.net/tx/$transactionId'),
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+
+      return TransactionJson.fromJson(json);
+    }
+
+    throw Exception('Failed to load transaction');
+  }
+}
+
+/// Uses the method `decodeBase64ToString` from the `arweave` package to decode
+///
+class TagDecoder {
+  Tag decodeTag(Map<String, dynamic> tag) {
+    return Tag(
+      name: decodeBase64ToString(tag["name"]),
+      value: decodeBase64ToString(tag["value"]),
+    );
+  }
 }
