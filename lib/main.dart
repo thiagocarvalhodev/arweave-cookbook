@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:ardrive_ui/ardrive_ui.dart';
 import 'package:arweave/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 // http
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -65,287 +66,311 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(24),
-            children: [
-              Center(
-                child: Column(
-                  children: [
-                    Text('Check the code on the permaweb:',
-                        style: ArDriveTypography.body.bodyRegular()),
-                    GestureDetector(
-                      onTap: () {
-                        launchUrl(Uri.parse(
-                            'https://app.ardrive.io/#/drives/16b6edd0-10f2-478e-a4a8-03ac97f1b50b?name=permaweb'));
-                      },
-                      child: Text(
-                        'https://app.ardrive.io/#/drives/16b6edd0-10f2-478e-a4a8-03ac97f1b50b?name=permaweb',
-                        style: ArDriveTypography.body
-                            .bodyBold()
-                            .copyWith(decoration: TextDecoration.underline),
+      body: Stack(
+        children: [
+          Center(
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  Center(
+                    child: Column(
+                      children: [
+                        Text('Check the code on the permaweb:',
+                            style: ArDriveTypography.body.bodyRegular()),
+                        GestureDetector(
+                          onTap: () {
+                            launchUrl(Uri.parse(
+                                'https://app.ardrive.io/#/drives/16b6edd0-10f2-478e-a4a8-03ac97f1b50b?name=permaweb'));
+                          },
+                          child: Text(
+                            'https://app.ardrive.io/#/drives/16b6edd0-10f2-478e-a4a8-03ac97f1b50b?name=permaweb',
+                            style: ArDriveTypography.body
+                                .bodyBold()
+                                .copyWith(decoration: TextDecoration.underline),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 24,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Column(
+                              children: [
+                                Text(
+                                    'Check how to deploy on arweave using ardrive by playing the video here or on the permaweb:',
+                                    style:
+                                        ArDriveTypography.body.bodyRegular()),
+                                GestureDetector(
+                                  onTap: () {
+                                    launchUrl(Uri.parse(
+                                        'https://arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E'));
+                                  },
+                                  child: Text(
+                                    'arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E',
+                                    style: ArDriveTypography.body
+                                        .bodyBold()
+                                        .copyWith(
+                                            decoration:
+                                                TextDecoration.underline),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              width: 24,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _controller.value.isPlaying
+                                      ? _controller.pause()
+                                      : _controller.play();
+                                });
+                                showAnimatedDialog(
+                                  context,
+                                  content: ArDriveStandardModal(
+                                    hasCloseButton: true,
+                                    width: 800,
+                                    content: Column(
+                                      children: [
+                                        Align(
+                                          alignment: Alignment.topRight,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: ArDriveIcons.x(),
+                                            ),
+                                          ),
+                                        ),
+                                        const VideoApp()
+                                      ],
+                                    ),
+                                  ),
+                                ).then((value) {
+                                  setState(() {
+                                    _controller.pause();
+                                  });
+                                });
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: ArDriveTheme.of(context)
+                                      .themeData
+                                      .colors
+                                      .themeBgCanvas,
+                                ),
+                                padding: const EdgeInsets.all(8),
+                                child: Icon(
+                                  _controller.value.isPlaying
+                                      ? Icons.pause
+                                      : Icons.play_arrow,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 24,
+                  ),
+                  Center(
+                    child: Text(
+                      'Arweave Permaweb Cookbook',
+                      style: ArDriveTypography.headline.headline2Regular(),
+                    ),
+                  ),
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 24.0),
+                      child: SizedBox(
+                        width: 450,
+                        child: ArDriveTextField(
+                          hintText: 'Insert a transaction ID',
+                          validator: (s) {
+                            final regExp = RegExp(
+                              r'^[a-zA-Z0-9-_s+]{43}$',
+                              caseSensitive: false,
+                              multiLine: false,
+                            );
+
+                            if (s == null || !regExp.hasMatch(s)) {
+                              return 'Invalid transaction ID';
+                            }
+
+                            return null;
+                          },
+                          controller: _textController,
+                        ),
                       ),
+                    ),
+                  ),
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 24.0),
+                      child: ArDriveButton(
+                        onPressed: () {
+                          if (_formKey.currentState!.validate()) {
+                            _getTransaction(_textController.text);
+                          }
+                        },
+                        text: 'Confirm',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 24,
+                  ),
+                  if (_hasError)
+                    Text(
+                      'Error',
+                      style: ArDriveTypography.headline.headline5Regular(),
+                    ),
+                  if (_tx != null) ...[
+                    Text(
+                      'Transaction',
+                      style: ArDriveTypography.headline.headline3Regular(),
                     ),
                     const SizedBox(
                       height: 24,
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Column(
-                          children: [
-                            Text(
-                                'Check how to deploy on arweave using ardrive by playing the video here or on the permaweb:',
-                                style: ArDriveTypography.body.bodyRegular()),
-                            GestureDetector(
-                              onTap: () {
-                                launchUrl(Uri.parse(
-                                    'https://arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E'));
-                              },
-                              child: Text(
-                                'arweave.net/H3Ndx8BrsI87R_pdrg7zmySMW-FnqfiOE73IsGXz68E',
-                                style: ArDriveTypography.body
-                                    .bodyBold()
-                                    .copyWith(
-                                        decoration: TextDecoration.underline),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(
-                          width: 24,
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _controller.value.isPlaying
-                                  ? _controller.pause()
-                                  : _controller.play();
-                            });
-                            showAnimatedDialog(
-                              context,
-                              content: ArDriveStandardModal(
-                                hasCloseButton: true,
-                                width: 800,
-                                content: Column(
-                                  children: [
-                                    Align(
-                                      alignment: Alignment.topRight,
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                          child: ArDriveIcons.x(),
-                                        ),
-                                      ),
-                                    ),
-                                    const VideoApp()
-                                  ],
-                                ),
-                              ),
-                            ).then((value) {
-                              setState(() {
-                                _controller.pause();
-                              });
-                            });
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: ArDriveTheme.of(context)
-                                  .themeData
-                                  .colors
-                                  .themeBgCanvas,
-                            ),
-                            padding: const EdgeInsets.all(8),
-                            child: Icon(
-                              _controller.value.isPlaying
-                                  ? Icons.pause
-                                  : Icons.play_arrow,
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 24,
-              ),
-              Center(
-                child: Text(
-                  'Arweave Permaweb Cookbook',
-                  style: ArDriveTypography.headline.headline2Regular(),
-                ),
-              ),
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 24.0),
-                  child: SizedBox(
-                    width: 450,
-                    child: ArDriveTextField(
-                      hintText: 'Insert a transaction ID',
-                      validator: (s) {
-                        final regExp = RegExp(
-                          r'^[a-zA-Z0-9-_s+]{43}$',
-                          caseSensitive: false,
-                          multiLine: false,
-                        );
-
-                        if (s == null || !regExp.hasMatch(s)) {
-                          return 'Invalid transaction ID';
-                        }
-
-                        return null;
-                      },
-                      controller: _textController,
-                    ),
-                  ),
-                ),
-              ),
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 24.0),
-                  child: ArDriveButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _getTransaction(_textController.text);
-                      }
-                    },
-                    text: 'Confirm',
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 24,
-              ),
-              if (_hasError)
-                Text(
-                  'Error',
-                  style: ArDriveTypography.headline.headline5Regular(),
-                ),
-              if (_tx != null) ...[
-                Text(
-                  'Transaction',
-                  style: ArDriveTypography.headline.headline3Regular(),
-                ),
-                const SizedBox(
-                  height: 24,
-                ),
-                ListTile(
-                  title: Text(
-                    'format',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.format.toString()),
-                ),
-                ListTile(
-                  title: Text(
-                    'id',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.id),
-                ),
-                ListTile(
-                  title: Text(
-                    'last_tx',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.lastTx),
-                ),
-                ListTile(
-                  title: Text(
-                    'owner',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.owner),
-                ),
-                ArDriveAccordion(
-                  backgroundColor: Colors.transparent,
-                  children: [
-                    ArDriveAccordionItem(
-                      Text(
-                        'tags',
+                    ListTile(
+                      title: Text(
+                        'format',
                         style: ArDriveTypography.body.bodyRegular(),
                       ),
-                      _tx!.tags
-                          .map((e) => Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: ListTile(
-                                  title: Text(
-                                    e.name,
-                                    style:
-                                        ArDriveTypography.body.smallRegular(),
-                                  ),
-                                  subtitle: Text(e.value!),
-                                ),
-                              ))
-                          .toList(),
-                      isExpanded: true,
+                      subtitle: Text(_tx!.format.toString()),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'id',
+                        style: ArDriveTypography.body.bodyRegular(),
+                      ),
+                      subtitle: Text(_tx!.id),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'last_tx',
+                        style: ArDriveTypography.body.bodyRegular(),
+                      ),
+                      subtitle: Text(_tx!.lastTx),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'owner',
+                        style: ArDriveTypography.body.bodyRegular(),
+                      ),
+                      subtitle: Text(_tx!.owner),
+                    ),
+                    ArDriveAccordion(
+                      backgroundColor: Colors.transparent,
+                      children: [
+                        ArDriveAccordionItem(
+                          Text(
+                            'tags',
+                            style: ArDriveTypography.body.bodyRegular(),
+                          ),
+                          _tx!.tags
+                              .map((e) => Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: ListTile(
+                                      title: Text(
+                                        e.name,
+                                        style: ArDriveTypography.body
+                                            .smallRegular(),
+                                      ),
+                                      subtitle: Text(e.value!),
+                                    ),
+                                  ))
+                              .toList(),
+                          isExpanded: true,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    ListTile(
+                      title: Text(
+                        'target',
+                        style: ArDriveTypography.body.bodyRegular(),
+                      ),
+                      subtitle: Text(_tx!.target),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'quantity',
+                        style: ArDriveTypography.body.bodyRegular(),
+                      ),
+                      subtitle: Text(_tx!.quantity.toString()),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'data',
+                        style: ArDriveTypography.body.bodyRegular(),
+                      ),
+                      subtitle: Text(_tx!.data.toString()),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'data_size',
+                        style: ArDriveTypography.body.bodyRegular(),
+                      ),
+                      subtitle: Text(_tx!.dataSize.toString()),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'data_root',
+                        style: ArDriveTypography.body.bodyRegular(),
+                      ),
+                      subtitle: Text(_tx!.dataRoot.toString()),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'reward',
+                        style: ArDriveTypography.body.bodyRegular(),
+                      ),
+                      subtitle: Text(_tx!.reward.toString()),
+                    ),
+                    ListTile(
+                      title: Text(
+                        'signature',
+                        style: ArDriveTypography.body.bodyRegular(),
+                      ),
+                      subtitle: Text(_tx!.signature.toString()),
                     ),
                   ],
-                ),
-                const SizedBox(
-                  height: 8,
-                ),
-                ListTile(
-                  title: Text(
-                    'target',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.target),
-                ),
-                ListTile(
-                  title: Text(
-                    'quantity',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.quantity.toString()),
-                ),
-                ListTile(
-                  title: Text(
-                    'data',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.data.toString()),
-                ),
-                ListTile(
-                  title: Text(
-                    'data_size',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.dataSize.toString()),
-                ),
-                ListTile(
-                  title: Text(
-                    'data_root',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.dataRoot.toString()),
-                ),
-                ListTile(
-                  title: Text(
-                    'reward',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.reward.toString()),
-                ),
-                ListTile(
-                  title: Text(
-                    'signature',
-                    style: ArDriveTypography.body.bodyRegular(),
-                  ),
-                  subtitle: Text(_tx!.signature.toString()),
-                ),
-              ]
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: GestureDetector(
+              onTap: () {
+                launchUrl(
+                  Uri.parse(
+                      'https://github.com/thiagocarvalhodev/arweave-cookbook'),
+                );
+              },
+              child: SvgPicture.asset(
+                'assets/github.svg',
+                color: Colors.white,
+                height: 52,
+                width: 52,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
